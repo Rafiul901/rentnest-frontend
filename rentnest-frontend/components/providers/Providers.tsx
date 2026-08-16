@@ -1,19 +1,21 @@
+"use client";
 
-'use client';
+import QueryProvider from "./QueryProvider";
+import AuthProvider from "./AuthProvider";
+import { Toaster } from "react-hot-toast";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
-
-export default function Providers({ children }: { children: React.ReactNode }) {
-  // Create a client instance per request scope in Next.js App Router
-  const [queryClient] = useState(() => new QueryClient());
-
+export default function Providers({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      {/* Devtools must be INSIDE the provider */}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <QueryProvider>
+      <AuthProvider>
+        {children}
+
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </QueryProvider>
   );
 }

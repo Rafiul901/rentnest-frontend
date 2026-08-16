@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
+import Navbar from "@/components/shared/Navbar";
 
 export const metadata: Metadata = {
   title: "RentNest",
@@ -15,7 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar />
+
+          {children}
+        </Providers>
       </body>
     </html>
   );
