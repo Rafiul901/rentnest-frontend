@@ -1,5 +1,8 @@
 {
 	"dependencies": {
 		"@tanstack/react-query-devtools": "^5.101.4"
+	},
+	"devDependencies": {
+		"@types/js-cookie": "^3.0.6"
 	}
 }
