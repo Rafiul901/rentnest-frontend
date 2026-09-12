@@ -23,13 +23,13 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="mb-4 font-medium text-gray-400">
-              FIND YOUR NEXT HOME
+              FIND YOUR NEXT HOUSE
             </p>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              Find a place you'll
+              Find a place you will
               <span className="block text-gray-400">
-                love to call home.
+                like to Stay.
               </span>
             </h1>
 
