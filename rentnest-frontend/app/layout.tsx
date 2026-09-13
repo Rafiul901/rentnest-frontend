@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+
 import Providers from "@/components/providers/Providers";
 import Navbar from "@/components/shared/Navbar";
 
@@ -18,8 +20,8 @@ export default function RootLayout({
       <body>
         <Providers>
           <Navbar />
-
           {children}
+          <Toaster position="top-right" />
         </Providers>
       </body>
     </html>

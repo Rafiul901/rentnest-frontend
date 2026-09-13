@@ -23,30 +23,27 @@ const listeners = new Set<() => void>();
 
 function subscribe(cb: () => void) {
   listeners.add(cb);
- 
-  window.addEventListener("storage", cb);
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", cb);
+  }
   return () => {
     listeners.delete(cb);
-    window.removeEventListener("storage", cb);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", cb);
+    }
   };
 }
 
-let cachedRaw: string | null = null;
-let cachedUser: User | null = null;
+
+let cached: User | null = null;
 
 function getSnapshot(): User | null {
-  const raw = localStorage.getItem("user");
-  if (raw !== cachedRaw) {
-    cachedRaw = raw;
-    try {
-      cachedUser = raw ? (JSON.parse(raw) as User) : null;
-    } catch {
-      cachedUser = null;
-    }
+  const next = getStoredUser(); 
+  if (JSON.stringify(next) !== JSON.stringify(cached)) {
+    cached = next;
   }
-  return cachedUser;
+  return cached;
 }
-
 
 function getServerSnapshot(): User | null {
   return null;
@@ -59,18 +56,15 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const storedUser = useSyncExternalStore(
+  const user = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   );
 
- 
-  const user = storedUser;
-
   const logout = useCallback(() => {
     clearAuth();
-   
+    cached = null;
     listeners.forEach((cb) => cb());
     window.location.href = "/auth/login";
   }, []);
@@ -83,9 +77,7 @@ export default function AuthProvider({
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
 };
