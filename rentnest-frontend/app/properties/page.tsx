@@ -5,7 +5,6 @@ import { useState } from "react";
 import PropertyFilters from "@/components/property/PropertyFilters";
 import PropertyGrid from "@/components/property/PropertyGrid";
 import PropertySkeleton from "@/components/property/PropertySkeleton";
-import { Button } from "@/components/ui/button";
 
 import { useProperties } from "@/hooks/useProperties";
 
@@ -13,36 +12,19 @@ export default function PropertiesPage() {
   const [location, setLocation] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [page, setPage] = useState(1);
 
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useProperties({
-    page,
-    limit: 10,
-
+  const { data, isLoading, isError } = useProperties({
     location: location || undefined,
-
-    minPrice: minPrice
-      ? Number(minPrice)
-      : undefined,
-
-    maxPrice: maxPrice
-      ? Number(maxPrice)
-      : undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
   });
 
   const properties = data?.data ?? [];
-
-  const totalPages = data?.meta.totalPages ?? 1;
 
   const clearFilters = () => {
     setLocation("");
     setMinPrice("");
     setMaxPrice("");
-    setPage(1);
   };
 
   return (
@@ -59,8 +41,8 @@ export default function PropertiesPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-gray-500">
-            Browse rental properties and find a place
-            that fits your lifestyle and budget.
+            Browse rental properties and find a place that fits your lifestyle
+            and budget.
           </p>
         </div>
       </section>
@@ -71,27 +53,16 @@ export default function PropertiesPage() {
           location={location}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          onLocationChange={(value) => {
-            setLocation(value);
-            setPage(1);
-          }}
-          onMinPriceChange={(value) => {
-            setMinPrice(value);
-            setPage(1);
-          }}
-          onMaxPriceChange={(value) => {
-            setMaxPrice(value);
-            setPage(1);
-          }}
+          onLocationChange={setLocation}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
           onClear={clearFilters}
         />
 
         {/* Results header */}
         <div className="my-8 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">
-              Available Properties
-            </h2>
+            <h2 className="text-2xl font-bold">Available Properties</h2>
 
             {!isLoading && data?.meta && (
               <p className="mt-1 text-sm text-gray-500">
@@ -104,11 +75,9 @@ export default function PropertiesPage() {
         {/* Loading */}
         {isLoading && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map(
-              (_, index) => (
-                <PropertySkeleton key={index} />
-              )
-            )}
+            {Array.from({ length: 6 }).map((_, index) => (
+              <PropertySkeleton key={index} />
+            ))}
           </div>
         )}
 
@@ -120,53 +89,14 @@ export default function PropertiesPage() {
             </h3>
 
             <p className="mt-2 text-sm text-red-600">
-              We could not load the properties.
-              Please try again.
+              We could not load the properties. Please try again.
             </p>
           </div>
         )}
 
         {/* Results */}
         {!isLoading && !isError && (
-          <>
-            <PropertyGrid properties={properties} />
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  disabled={page === 1}
-                  onClick={() =>
-                    setPage((previous) =>
-                      Math.max(previous - 1, 1)
-                    )
-                  }
-                >
-                  Previous
-                </Button>
-
-                <span className="text-sm text-gray-600">
-                  Page {page} of {totalPages}
-                </span>
-
-                <Button
-                  variant="outline"
-                  disabled={page === totalPages}
-                  onClick={() =>
-                    setPage((previous) =>
-                      Math.min(
-                        previous + 1,
-                        totalPages
-                      )
-                    )
-                  }
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
+          <PropertyGrid properties={properties} />
         )}
       </div>
     </main>

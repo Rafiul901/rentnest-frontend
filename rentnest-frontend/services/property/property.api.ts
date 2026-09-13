@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { PropertyResponse } from "@/types/property";
+import { PropertyDetailResponse, PropertyResponse } from "@/types/property";
 
 export interface PropertyFilters {
   location?: string;
@@ -26,6 +26,16 @@ export const getProperties = async (
   const response = await axiosInstance.get<PropertyResponse>(
     "/properties",
     { params }
+  );
+
+  return response.data;
+};
+
+export const getPropertyById = async (
+  id: string
+): Promise<PropertyDetailResponse> => {
+  const response = await axiosInstance.get<PropertyDetailResponse>(
+    `/properties/${id}`
   );
 
   return response.data;

@@ -39,3 +39,10 @@ export interface PropertyResponse {
   };
   data: Property[];
 }
+
+export interface PropertyDetailResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: Property;
+}
