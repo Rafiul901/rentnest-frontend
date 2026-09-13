@@ -1,10 +1,10 @@
-export interface Landlord {
+export interface PropertyLandlord {
   id: string;
   name: string;
   email: string;
 }
 
-export interface Category {
+export interface PropertyCategory {
   id: string;
   name: string;
   createdAt: string;
@@ -23,15 +23,15 @@ export interface Property {
   categoryId: string;
   createdAt: string;
   updatedAt: string;
-  landlord: Landlord;
-  category: Category;
+  landlord: PropertyLandlord;
+  category: PropertyCategory;
 }
 
 export interface PropertyResponse {
   statusCode: number;
   success: boolean;
   message: string;
-  meta: {
+  meta?: {
     page: number;
     limit: number;
     total: number;
