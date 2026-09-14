@@ -1,4 +1,5 @@
 import axiosInstance from "@/lib/axios";
+import { RentalListResponse } from "@/types/rental";
 
 export interface CreateRentalRequest {
   propertyId: string;
@@ -27,6 +28,15 @@ export const createRentalRequest = async (
   const response = await axiosInstance.post<RentalResponse>(
     "/rentals",
     rentalData
+  );
+
+  return response.data;
+};
+
+
+export const getMyRentals = async (): Promise<RentalListResponse> => {
+  const response = await axiosInstance.get<RentalListResponse>(
+    "/rentals"
   );
 
   return response.data;
