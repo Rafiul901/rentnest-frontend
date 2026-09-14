@@ -1,7 +1,12 @@
 "use client";
 
+import toast from "react-hot-toast";
+import axios from "axios";
+
 import { useRentals } from "@/hooks/useRentals";
 import { usePayments } from "@/hooks/usePayments";
+import { useCreatePayment } from "@/hooks/useCreatePayment";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +37,59 @@ export default function TenantDashboardPage() {
     isLoading: paymentsLoading,
     isError: paymentsError,
   } = usePayments();
+
+  const createPaymentMutation = useCreatePayment();
+
+  // -----------------------------
+  // Payment handler
+  // -----------------------------
+
+  const handlePayment = (rentalRequestId: string) => {
+    createPaymentMutation.mutate(
+      {
+        rentalRequestId,
+        provider: "STRIPE",
+      },
+      {
+        onSuccess: (response) => {
+          const stripeUrl = response.data.stripeSession.url;
+
+          if (stripeUrl) {
+            window.location.href = stripeUrl;
+          } else {
+            toast.error("Stripe checkout URL was not found.");
+          }
+        },
+        onError: (error: unknown) => {
+          console.error("Create payment failed:", error);
+
+          let status: number | undefined;
+          let backendMessage: string | undefined;
+
+          if (axios.isAxiosError(error)) {
+            status = error.response?.status;
+            const data = error.response?.data;
+
+            // Backend sometimes returns HTML for 409 (Express default).
+            // Guard so we don't crash trying to read `.message` off a string.
+            if (data && typeof data === "object" && "message" in data) {
+              backendMessage = (data as { message?: string }).message;
+            }
+          }
+
+          if (status === 409) {
+            toast.error("A payment for this rental already exists.");
+          } else if (status === 401) {
+            toast.error("Please log in again.");
+          } else if (status === 403) {
+            toast.error("Only tenants can pay rent.");
+          } else {
+            toast.error(backendMessage ?? "Unable to start payment.");
+          }
+        },
+      }
+    );
+  };
 
   // -----------------------------
   // Loading state
@@ -129,13 +187,10 @@ export default function TenantDashboardPage() {
     switch (status) {
       case "APPROVED":
         return "default";
-
       case "PENDING":
         return "secondary";
-
       case "REJECTED":
         return "destructive";
-
       default:
         return "outline";
     }
@@ -263,71 +318,70 @@ export default function TenantDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {rentals.map((rental) => (
-                  <div
-                    key={rental.id}
-                    className="rounded-xl border bg-white p-5 transition hover:shadow-sm"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      {/* Property information */}
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold">
-                            {rental.property.title}
-                          </h3>
+                {rentals.map((rental) => {
+                  const isThisOnePending =
+                    createPaymentMutation.isPending &&
+                    createPaymentMutation.variables?.rentalRequestId ===
+                      rental.id;
 
-                          <Badge
-                            variant={getStatusVariant(rental.status)}
-                          >
-                            {rental.status}
-                          </Badge>
+                  return (
+                    <div
+                      key={rental.id}
+                      className="rounded-xl border bg-white p-5 transition hover:shadow-sm"
+                    >
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        {/* Property information */}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-semibold">
+                              {rental.property.title}
+                            </h3>
+
+                            <Badge variant={getStatusVariant(rental.status)}>
+                              {rental.status}
+                            </Badge>
+                          </div>
+
+                          <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                            <MapPin className="h-4 w-4" />
+                            <span>{rental.property.location}</span>
+                          </div>
+
+                          <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                            <CalendarDays className="h-4 w-4" />
+                            <span>
+                              Move-in: {formatDate(rental.moveInDate)}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                          <MapPin className="h-4 w-4" />
+                        {/* Price + action */}
+                        <div className="flex flex-col items-start gap-3 md:items-end">
+                          <p className="text-lg font-bold">
+                            {formatCurrency(rental.property.price)}
+                            <span className="text-sm font-normal text-gray-500">
+                              {" "}
+                              / month
+                            </span>
+                          </p>
 
-                          <span>
-                            {rental.property.location}
-                          </span>
-                        </div>
-
-                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                          <CalendarDays className="h-4 w-4" />
-
-                          <span>
-                            Move-in: {formatDate(rental.moveInDate)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Price + action */}
-                      <div className="flex flex-col items-start gap-3 md:items-end">
-                        <p className="text-lg font-bold">
-                          {formatCurrency(rental.property.price)}
-                          <span className="text-sm font-normal text-gray-500">
-                            {" "}
-                            / month
-                          </span>
-                        </p>
-
-                        {rental.status === "APPROVED" && (
-                          <div
-                            title="Coming soon"
-                            className="cursor-not-allowed"
-                          >
+                          {rental.status === "APPROVED" && (
                             <Button
-                              disabled
                               className="gap-2"
+                              onClick={() => handlePayment(rental.id)}
+                              disabled={createPaymentMutation.isPending}
                             >
                               <CreditCard className="h-4 w-4" />
-                              Pay Rent
+                              {isThisOnePending
+                                ? "Processing..."
+                                : "Pay Rent"}
                             </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -360,7 +414,6 @@ export default function TenantDashboardPage() {
                     className="rounded-xl border bg-white p-5"
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      {/* Payment information */}
                       <div>
                         <h3 className="font-semibold">
                           {payment.rentalRequest.property.title}
@@ -371,25 +424,19 @@ export default function TenantDashboardPage() {
                         </p>
 
                         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-                          <span>
-                            Provider: {payment.provider}
-                          </span>
-
+                          <span>Provider: {payment.provider}</span>
                           <span>
                             Date: {formatDate(payment.createdAt)}
                           </span>
                         </div>
                       </div>
 
-                      {/* Payment amount/status */}
                       <div className="flex flex-col items-start gap-2 md:items-end">
                         <p className="text-lg font-bold">
                           {formatCurrency(payment.amount)}
                         </p>
 
-                        <Badge
-                          variant={getStatusVariant(payment.status)}
-                        >
+                        <Badge variant={getStatusVariant(payment.status)}>
                           {payment.status}
                         </Badge>
 
