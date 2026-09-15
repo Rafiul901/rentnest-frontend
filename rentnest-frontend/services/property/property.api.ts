@@ -40,3 +40,31 @@ export const getPropertyById = async (
 
   return response.data;
 };
+
+export interface CreatePropertyRequest {
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  amenities: string[];
+  available?: boolean;
+  categoryId: string;
+}
+
+export interface CreatePropertyResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: PropertyResponse["data"][number];
+}
+
+export const createProperty = async (
+  propertyData: CreatePropertyRequest
+): Promise<CreatePropertyResponse> => {
+  const response = await axiosInstance.post<CreatePropertyResponse>(
+    "/properties",
+    propertyData
+  );
+
+  return response.data;
+};

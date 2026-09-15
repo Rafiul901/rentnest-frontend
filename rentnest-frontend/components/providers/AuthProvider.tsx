@@ -7,7 +7,11 @@ import {
   useSyncExternalStore,
 } from "react";
 import { User } from "@/types/auth";
-import { clearAuth, getStoredUser } from "@/lib/auth";
+import {
+  clearAuth,
+  getStoredUser,
+  subscribeToAuth,
+} from "@/lib/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -19,26 +23,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
 
-const listeners = new Set<() => void>();
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", cb);
-  }
-  return () => {
-    listeners.delete(cb);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", cb);
-    }
-  };
-}
-
-
 let cached: User | null = null;
 
 function getSnapshot(): User | null {
-  const next = getStoredUser(); 
+  const next = getStoredUser();
   if (JSON.stringify(next) !== JSON.stringify(cached)) {
     cached = next;
   }
@@ -47,6 +35,26 @@ function getSnapshot(): User | null {
 
 function getServerSnapshot(): User | null {
   return null;
+}
+
+
+
+function subscribe(cb: () => void) {
+
+  const unsubscribeLocal = subscribeToAuth(cb);
+
+
+  const onStorage = () => cb();
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+
+  return () => {
+    unsubscribeLocal();
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
 }
 
 
@@ -63,9 +71,8 @@ export default function AuthProvider({
   );
 
   const logout = useCallback(() => {
-    clearAuth();
+    clearAuth();          
     cached = null;
-    listeners.forEach((cb) => cb());
     window.location.href = "/auth/login";
   }, []);
 
@@ -74,7 +81,7 @@ export default function AuthProvider({
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
