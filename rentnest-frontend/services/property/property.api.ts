@@ -68,3 +68,50 @@ export const createProperty = async (
 
   return response.data;
 };
+
+export interface UpdatePropertyRequest {
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  amenities: string[];
+  available?: boolean;
+  categoryId: string;
+}
+
+export interface UpdatePropertyResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: PropertyResponse["data"][number];
+}
+
+export const updateProperty = async (
+  propertyId: string,
+  propertyData: UpdatePropertyRequest
+): Promise<UpdatePropertyResponse> => {
+  const response = await axiosInstance.patch<UpdatePropertyResponse>(
+    `/properties/${propertyId}`,
+    propertyData
+  );
+
+  return response.data;
+};
+
+export interface DeletePropertyResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+}
+
+export const deleteProperty = async (
+  propertyId: string
+): Promise<DeletePropertyResponse> => {
+  const response = await axiosInstance.delete<DeletePropertyResponse>(
+    `/properties/${propertyId}`
+  );
+
+  return response.data;
+};
+
+
