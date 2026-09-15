@@ -9,7 +9,7 @@ This project is the frontend implementation of **Assignment 5**, built with Next
 ## 🚀 Live Demo
 
 **Frontend:**  
-Add your deployed frontend URL here.
+(https://rentnest-app-theta.vercel.app/)
 
 **Backend API:**  
 https://project-a4-taupe.vercel.app/api
