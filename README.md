@@ -12,7 +12,7 @@ This project is the frontend implementation of **Assignment 5**, built with Next
 (https://rentnest-app-theta.vercel.app/)
 
 **Backend API:**  
-https://project-a4-taupe.vercel.app/api
+https://project-a4-taupe.vercel.app
 
 ---
 
